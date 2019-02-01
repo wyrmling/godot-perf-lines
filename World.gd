@@ -1,17 +1,48 @@
 extends Node2D
 
-var line_num : int
-var lines : Array
+var obj_num : int
+var obj_type : String
 #var obstacles_of_vectors : PoolVector3Array
 
 func _draw():
-    for arr in lines:
-        draw_line(
-            arr[0],
-            arr[1],
-            Color("#b2d90a"),
-            3.0
-        )
+    match obj_type:
+        'line':
+            for i in obj_num:
+                draw_line(
+                    Vector2(randi()%640, randi()%360),
+                    Vector2(randi()%640, randi()%360),
+#                    Color("#b2d90a"),
+                    Color(randf(), randf(), randf()),
+                    2.0
+                )
+        'polyline':
+            var pool : Array = []
+            for i in obj_num:
+                pool.append(Vector2(randi()%640, randi()%360))
+            draw_polyline(
+                PoolVector2Array(pool),
+#                    Color("#b2d90a"),
+                Color(randf(), randf(), randf()),
+                2.0
+            )
+        'circle':
+            for i in obj_num:
+                draw_circle(
+                    Vector2(randi()%640+10, randi()%360+10),
+                    randi()%30,
+#                    Color("#b2d90a"),
+                    Color(randf(), randf(), randf())
+                )
+        'rect':
+            for i in obj_num:
+                draw_rect(
+                    Rect2(Vector2(randi()%640, randi()%360), Vector2(randi()%640, randi()%360)),
+                    Color(randf(), randf(), randf()),
+                    true
+                )
+        _:
+            print("Type not set")
+
 #    var pool_vectors : PoolVector2Array
 #    for path_vector in path_of_vectors:
 #        pool_vectors.append(Vector2(path_vector.x*16, path_vector.y*16))
@@ -56,24 +87,45 @@ func _draw():
 #        )
 
 func setLines(value):
-    line_num = value
+    obj_num = value
     $gui/block/label.text = str(value)
 
-func drawLines():
-    lines.clear()
-    for i in range(line_num):
-        lines.append([Vector2(randi()%640, randi()%360), Vector2(randi()%640, randi()%360)])
+func drawCustom(type):
+    obj_type = type
+    update()
+
+func drawLines2D():
+    for c in $"2dlines_container".get_children():
+        c.queue_free()
+    for i in range(obj_num):
+        var l = Line2D.new()
+        l.add_point(Vector2(randi()%640, randi()%360))
+        l.add_point(Vector2(randi()%640, randi()%360))
+        l.width = 2
+        $"2dlines_container".add_child(l)
+
+func clearAll():
+    for c in $"2dlines_container".get_children():
+        c.queue_free()
+    obj_type = ''
     update()
 
 func _ready():
-    $gui/block/label.text = str($gui/block/lines_num.value)
+    randomize()
+
+    var num = $gui/block/lines_num.value
+    obj_num = num
+    $gui/block/label.text = str(num)
+
     $gui/block/lines_num.connect('value_changed', self, 'setLines')
-#    $gui/block/lines_num.connect('valueChanged', self, 'setLines', ['test'])
-    $gui/b_draw.connect('pressed', self, 'drawLines')
 
+    $gui.find_node('b_draw_line').connect('pressed', self, 'drawCustom', ['line'])
+    $gui.find_node('b_draw_polyline').connect('pressed', self, 'drawCustom', ['polyline'])
+    $gui.find_node('b_draw_circles').connect('pressed', self, 'drawCustom', ['circle'])
+    $gui.find_node('b_draw_rect').connect('pressed', self, 'drawCustom', ['rect'])
+    $gui/b_draw_line2d.connect('pressed', self, 'drawLines2D')
 
-#    $gui/Start.connect('valueChanged', self, 'calculatePath')
-#    $gui/End.connect('valueChanged', self, 'calculatePath')
+    $gui/clear.connect('pressed', self, 'clearAll')
 
 func _process(delta):
     $fps_container/fps.text = str(Engine.get_frames_per_second())
