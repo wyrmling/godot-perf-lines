@@ -1,12 +1,14 @@
 extends Node2D
 
 var obj_num : int
-var obj_type : String
+var obj_type : int = -1
 #var obstacles_of_vectors : PoolVector3Array
+
+enum {LINE, POLYLINE, CIRCLE, RECT}
 
 func _draw():
     match obj_type:
-        'line':
+        LINE:
             for i in obj_num:
                 draw_line(
                     Vector2(randi()%640, randi()%360),
@@ -15,7 +17,7 @@ func _draw():
                     Color(randf(), randf(), randf()),
                     2.0
                 )
-        'polyline':
+        POLYLINE:
             var pool : Array = []
             for i in obj_num:
                 pool.append(Vector2(randi()%640, randi()%360))
@@ -25,7 +27,7 @@ func _draw():
                 Color(randf(), randf(), randf()),
                 2.0
             )
-        'circle':
+        CIRCLE:
             for i in obj_num:
                 draw_circle(
                     Vector2(randi()%640+10, randi()%360+10),
@@ -33,12 +35,12 @@ func _draw():
 #                    Color("#b2d90a"),
                     Color(randf(), randf(), randf())
                 )
-        'rect':
+        RECT:
             for i in obj_num:
                 draw_rect(
                     Rect2(Vector2(randi()%640, randi()%360), Vector2(randi()%640, randi()%360)),
                     Color(randf(), randf(), randf()),
-                    true
+                    $gui/ScrollContainer/VBoxContainer/Container/CheckButton.pressed
                 )
         _:
             print("Type not set")
@@ -107,7 +109,7 @@ func drawLines2D():
 func clearAll():
     for c in $"2dlines_container".get_children():
         c.queue_free()
-    obj_type = ''
+    obj_type = -1
     update()
 
 func _ready():
@@ -119,10 +121,10 @@ func _ready():
 
     $gui/block/lines_num.connect('value_changed', self, 'setLines')
 
-    $gui.find_node('b_draw_line').connect('pressed', self, 'drawCustom', ['line'])
-    $gui.find_node('b_draw_polyline').connect('pressed', self, 'drawCustom', ['polyline'])
-    $gui.find_node('b_draw_circles').connect('pressed', self, 'drawCustom', ['circle'])
-    $gui.find_node('b_draw_rect').connect('pressed', self, 'drawCustom', ['rect'])
+    $gui.find_node('b_draw_line').connect('pressed', self, 'drawCustom', [LINE])
+    $gui.find_node('b_draw_polyline').connect('pressed', self, 'drawCustom', [POLYLINE])
+    $gui.find_node('b_draw_circles').connect('pressed', self, 'drawCustom', [CIRCLE])
+    $gui.find_node('b_draw_rect').connect('pressed', self, 'drawCustom', [RECT])
     $gui/b_draw_line2d.connect('pressed', self, 'drawLines2D')
 
     $gui/clear.connect('pressed', self, 'clearAll')
